@@ -1,0 +1,36 @@
+name: BMS Live Tracker
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # Runs every ~5 minutes
+  workflow_dispatch: # Allows you to manually click "Run" for testing
+
+permissions:
+  contents: write
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install cloudscraper beautifulsoup4
+
+      - name: Run Scraper Script
+        run: python main.py # ⚠️ Ensure this matches your script's filename
+
+      - name: Commit and Push Data
+        run: |
+          git config --global user.name "BMS-Bot"
+          git config --global user.email "bot@users.noreply.github.com"
+          git add data/
+          # Only commit if data has changed
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update BMS interest data [skip ci]" && git push)
